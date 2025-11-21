@@ -1,38 +1,39 @@
 <?php
 try {
-    $mysqlClient = new PDO(
+    $dbh = new PDO(
         'mysql:host=localhost;dbname=airbnb;charset=utf8',
         'root',
-        '13062007'
+        ''
     );
 } catch (PDOException $e){
     die($e->getMessage());
 }
 
-$query = $mysqlClient->prepare("SELECT * FROM listings");
+$query = $dbh->prepare("SELECT * FROM listings");
 $query->execute();
 $data = $query->fetchAll();
-var_dump($data)
 
+
+$page = 0;
 
 ?>
 
 <h1>AirBNB</h1>
-<?php foreach($data as $element){  ?>
+<?php for($i = $page; $i<$page+10; $i++){  ?>
     <div>
-        <img src="<?php echo $element['picture_url']; ?>" 
+        <img src="<?php echo $data[$i]['picture_url']; ?>" 
              alt="Image" width="300" height="200">
 
-        <h1><?php echo $element['name']; ?></h1>
+        <h1><?php echo $data[$i]['name']; ?></h1>
 
         <p>
             <?php 
-                echo $element['price'] . " / nuit - " 
-                    . $element['neighbourhood_group_cleansed'] 
-                    . " - " . $element['review_scores_value'] . "/5";
+                echo $data[$i]['price'] . " / nuit - " 
+                    . $data[$i]['neighbourhood_group_cleansed'] 
+                    . " - " . $data[$i]['review_scores_value'] . "/5";
             ?>
         </p>
-            <p>    <img src="<?php echo $element['host_thumbnail_url']; ?>" 
-             alt="Image" width="50" height="50"> <?php echo $element['host_name']; ?>   </p>
+            <p>    <img src="<?php echo $data[$i]['host_thumbnail_url']; ?>" 
+             alt="Image" width="50" height="50"> <?php echo $data[$i]['host_name']; ?>   </p>
     </div>
 <?php } ?>
