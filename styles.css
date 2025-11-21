@@ -1,0 +1,101 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 20px;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #e74c3c;
+}
+
+h2 {
+    margin-top: 20px;
+    color: #2c3e50;
+}
+
+.form-section {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 30px;
+}
+
+.form-section input,
+.form-section select,
+.form-section button {
+    margin: 8px 0;
+    padding: 8px;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-section button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.form-section button:hover {
+    background-color: #00eef6;
+}
+
+.listing {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.listing img {
+    border-radius: 4px;
+}
+
+.listing h2 {
+    margin: 10px 0;
+    color: #34495e;
+}
+
+.listing p {
+    margin: 5px 0;
+}
+
+
+.host-info {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.host-info img {
+    border-radius: 5%;
+    border: 2px solid #ccc;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a button {
+    margin: 5px;
+    padding: 8px 12px;
+    border: 1px solid #3498db;
+    background: #fff;
+    color: #3498db;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.pagination a button:disabled {
+    background: #ff0000;
+    color: #fff;
+    cursor: default;
+}
