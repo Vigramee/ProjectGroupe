@@ -1,20 +1,32 @@
 <?php
-try {
-    $dbh = new PDO(
-        'mysql:host=localhost;dbname=airbnb;charset=utf8',
-        'root',
-        ''
-    );
-} catch (PDOException $e){
-    die($e->getMessage());
+require "config.php";
+
+
+$page = 0;
+
+
+$validSort = ["name", "price", "note", "neighbourhood_group_cleansed"];
+$sort = isset($_GET["sort"]) && in_array($_GET["sort"], $validSort)
+        ? $_GET["sort"] 
+        : "name";
+
+switch ($sort) {
+    case "price":
+        $orderSql = " ORDER BY price ASC ";
+        break;
+    case "note":
+        $orderSql = " ORDER BY review_scores_value DESC ";
+        break;
+    case "neighbourhood_group_cleansed":
+        $orderSql = " ORDER BY neighbourhood_group_cleansed ASC ";
+        break;
+    default:
+        $orderSql = " ORDER BY name ASC ";
 }
 
-$query = $dbh->prepare("SELECT * FROM listings");
+$query = $dbh->prepare("SELECT * FROM listings $orderSql");
 $query->execute();
 $data = $query->fetchAll();
-
-
-$page = isset($_GET["page"]) ? intval($_GET["page"]) : 0;
 
 function page($token){
     global $page;
@@ -23,6 +35,14 @@ function page($token){
 ?>
 
 <h1>AirBNB</h1>
+
+
+<div style="margin-bottom:15px;">
+    <a href="?sort=name"><button>Trier par nom</button></a>
+    <a href="?sort=price"><button>Trier par prix</button></a>
+    <a href="?sort=note"><button>Trier par note</button></a>
+    <a href="?sort=neighbourhood_group_cleansed"><button>Trier par quartier</button></a>
+</div>
 
 <?php for($i = $page; $i < $page + 10; $i++){ ?>
     <div>
@@ -46,9 +66,10 @@ function page($token){
         </p>
     </div>
 <?php } ?>
+
 <?php for($z = 0; $z < count($data); $z += 10){ ?>
     <button>
-        <a href="?page=<?php echo $z; ?>">
+        <a href="?page=<?php echo $z; ?>&sort=<?php echo $sort; ?>">
             <?php echo $z/10; ?>
         </a>
     </button>
