@@ -1,4 +1,7 @@
 <?php
+require 'config.php';
+
+
 
 if (isset($_POST['add'])) {
 
@@ -51,6 +54,7 @@ $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>AirBNB</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -58,7 +62,7 @@ $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
 <h2>Ajouter une nouvelle annonce</h2>
-<form method="POST">
+<form method="POST" class="form-section">
 
     Nom : <input type="text" name="name" required><br><br>
 
@@ -78,10 +82,7 @@ $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 </form>
 
-<br><hr><br>
-
-
-<form method="GET">
+<form method="GET" class="form-section">
     <label>Trier par :</label>
 
     <select name="sort">
@@ -116,32 +117,26 @@ $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
 <?php foreach ($data as $d): ?>
-    <div style="margin-bottom:20px;">
-
+    <div style="margin-bottom:20px;" class="listing">
         <img src="<?php echo htmlspecialchars($d['picture_url']); ?>"
              width="300" height="200">
-
         <h2><?php echo htmlspecialchars($d['name']); ?></h2>
-
         <p>
-            <?php echo $d['price']; ?> € / nuit — 
-            <?php echo htmlspecialchars($d['neighbourhood_group_cleansed']); ?>
-             — <?php echo $d['review_scores_value']; ?>/5
+            <?php echo $d['price']; ?> € / nuit —  
+            <?php echo htmlspecialchars($d['neighbourhood_group_cleansed']); ?>  
+            — <?php echo $d['review_scores_value']; ?>/5
         </p>
-
-        <p>
+        <div class="host-info">
             <img src="<?php echo htmlspecialchars($d['host_thumbnail_url']); ?>"
                  width="50" height="50">
-            <?php echo htmlspecialchars($d['host_name']); ?>
-        </p>
+            <span><?php echo htmlspecialchars($d['host_name']); ?></span>
+        </div>
 
     </div>
     <hr>
 <?php endforeach; ?>
 
-
-
-<div style="margin-top:20px;">
+<div style="margin-top:20px;" class="pagination">
     <?php for ($p = 0; $p < $totalPages; $p++): ?>
         <a href="?page=<?php echo $p; ?>&sort=<?php echo $sort; ?>&order=<?php echo strtolower($order); ?>">
             <button <?php if ($p == $page) echo "disabled"; ?>>
