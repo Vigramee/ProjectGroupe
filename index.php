@@ -1,76 +1,165 @@
 <?php
-require "config.php";
-
-
-$page = 0;
-
-
-$validSort = ["name", "price", "note", "neighbourhood_group_cleansed"];
-$sort = isset($_GET["sort"]) && in_array($_GET["sort"], $validSort)
-        ? $_GET["sort"] 
-        : "name";
-
-switch ($sort) {
-    case "price":
-        $orderSql = " ORDER BY price ASC ";
-        break;
-    case "note":
-        $orderSql = " ORDER BY review_scores_value DESC ";
-        break;
-    case "neighbourhood_group_cleansed":
-        $orderSql = " ORDER BY neighbourhood_group_cleansed ASC ";
-        break;
-    default:
-        $orderSql = " ORDER BY name ASC ";
+try {
+    $dbh = new PDO(
+        'mysql:host=localhost;dbname=airbnb;charset=utf8',
+        'root',
+        '13062007'
+    );
+} catch (PDOException $e){
+    die($e->getMessage());
 }
 
-$query = $dbh->prepare("SELECT * FROM listings $orderSql");
+
+if (isset($_POST['add'])) {
+
+    $insert = $dbh->prepare("
+        INSERT INTO listings(name, picture_url, price, neighbourhood_group_cleansed,
+                             review_scores_value, host_thumbnail_url, host_name)
+        VALUES(:name, :pic, :price, :ng, :score, :host_pic, :host_name)
+    ");
+
+    $insert->execute([
+        ':name'      => $_POST['name'],
+        ':pic'       => $_POST['picture_url'],
+        ':price'     => $_POST['price'],
+        ':ng'        => $_POST['neigh'],
+        ':score'     => $_POST['score'],
+        ':host_pic'  => $_POST['host_picture'],
+        ':host_name' => $_POST['host_name']
+    ]);
+}
+
+
+$columns = ['price', 'name', 'neighbourhood_group_cleansed', 'review_scores_value'];
+$sort = (isset($_GET['sort']) && in_array($_GET['sort'], $columns)) ? $_GET['sort'] : 'name';
+
+$order = (isset($_GET['order']) && $_GET['order'] === 'desc') ? 'DESC' : 'ASC';
+
+
+$perPage = 10;
+$page = isset($_GET['page']) ? intval($_GET['page']) : 0;
+
+$offset = $page * $perPage;
+
+$query = $dbh->prepare("SELECT COUNT(*) FROM listings");
 $query->execute();
-$data = $query->fetchAll();
+$total = $query->fetchColumn();
+$totalPages = ceil($total / $perPage);
 
-function page($token){
-    global $page;
-    $page = $token;
-}
+
+
+$sql = "SELECT * FROM listings ORDER BY $sort $order LIMIT :offset, :perpage";
+$stmt = $dbh->prepare($sql);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->bindValue(':perpage', $perPage, PDO::PARAM_INT);
+$stmt->execute();
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AirBNB</title>
+</head>
+<body>
 
 <h1>AirBNB</h1>
 
 
-<div style="margin-bottom:15px;">
-    <a href="?sort=name"><button>Trier par nom</button></a>
-    <a href="?sort=price"><button>Trier par prix</button></a>
-    <a href="?sort=note"><button>Trier par note</button></a>
-    <a href="?sort=neighbourhood_group_cleansed"><button>Trier par quartier</button></a>
+<h2>Ajouter une nouvelle annonce</h2>
+<form method="POST">
+
+    Nom : <input type="text" name="name" required><br><br>
+
+    URL Image : <input type="text" name="picture_url" required><br><br>
+
+    Prix : <input type="number" name="price" required><br><br>
+
+    Quartier : <input type="text" name="neigh" required><br><br>
+
+    Score : <input type="number" name="score" min="0" max="5" required><br><br>
+
+    URL Photo hôte : <input type="text" name="host_picture" required><br><br>
+
+    Nom hôte : <input type="text" name="host_name" required><br><br>
+
+    <button type="submit" name="add">Ajouter</button>
+
+</form>
+
+<br><hr><br>
+
+
+<form method="GET">
+    <label>Trier par :</label>
+
+    <select name="sort">
+        <option value="name" 
+            <?php if ($sort=='name') echo 'selected'; ?>>Nom</option>
+
+        <option value="price" 
+            <?php if ($sort=='price') echo 'selected'; ?>>Prix</option>
+
+        <option value="neighbourhood_group_cleansed" 
+            <?php if ($sort=='neighbourhood_group_cleansed') echo 'selected'; ?>>
+            Quartier
+        </option>
+
+        <option value="review_scores_value" 
+            <?php if ($sort=='review_scores_value') echo 'selected'; ?>>
+            Score
+        </option>
+    </select>
+
+    <select name="order">
+        <option value="asc" <?php if ($order=='ASC') echo 'selected'; ?>>Croissant</option>
+        <option value="desc" <?php if ($order=='DESC') echo 'selected'; ?>>Décroissant</option>
+    </select>
+
+    <input type="hidden" name="page" value="<?php echo $page; ?>">
+
+    <button type="submit">Trier</button>
+</form>
+
+<br><hr><br>
+
+
+<?php foreach ($data as $d): ?>
+    <div style="margin-bottom:20px;">
+
+        <img src="<?php echo htmlspecialchars($d['picture_url']); ?>"
+             width="300" height="200">
+
+        <h2><?php echo htmlspecialchars($d['name']); ?></h2>
+
+        <p>
+            <?php echo $d['price']; ?> € / nuit — 
+            <?php echo htmlspecialchars($d['neighbourhood_group_cleansed']); ?>
+             — <?php echo $d['review_scores_value']; ?>/5
+        </p>
+
+        <p>
+            <img src="<?php echo htmlspecialchars($d['host_thumbnail_url']); ?>"
+                 width="50" height="50">
+            <?php echo htmlspecialchars($d['host_name']); ?>
+        </p>
+
+    </div>
+    <hr>
+<?php endforeach; ?>
+
+
+
+<div style="margin-top:20px;">
+    <?php for ($p = 0; $p < $totalPages; $p++): ?>
+        <a href="?page=<?php echo $p; ?>&sort=<?php echo $sort; ?>&order=<?php echo strtolower($order); ?>">
+            <button <?php if ($p == $page) echo "disabled"; ?>>
+                Page <?php echo $p + 1; ?>
+            </button>
+        </a>
+    <?php endfor; ?>
 </div>
 
-<?php for($i = $page; $i < $page + 10; $i++){ ?>
-    <div>
-        <img src="<?php echo $data[$i]['picture_url']; ?>" 
-             alt="Image" width="300" height="200">
-
-        <h1><?php echo $data[$i]['name']; ?></h1>
-
-        <p>
-            <?php 
-                echo $data[$i]['price'] . " / nuit - " 
-                    . $data[$i]['neighbourhood_group_cleansed'] 
-                    . " - " . $data[$i]['review_scores_value'] . "/5";
-            ?>
-        </p>
-
-        <p>
-            <img src="<?php echo $data[$i]['host_thumbnail_url']; ?>" 
-                 alt="Image" width="50" height="50"> 
-            <?php echo $data[$i]['host_name']; ?>
-        </p>
-    </div>
-<?php } ?>
-
-<?php for($z = 0; $z < count($data); $z += 10){ ?>
-    <button>
-        <a href="?page=<?php echo $z; ?>&sort=<?php echo $sort; ?>">
-            <?php echo $z/10; ?>
-        </a>
-    </button>
-<?php } ?>
+</body>
+</html>
